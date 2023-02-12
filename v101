@@ -1,0 +1,112 @@
+// Define the metrics, label and weights
+// metric ranges from 0-10.
+// metric value could be 0, 2, 5, 7, 10
+const metrics = {
+  build: {
+    jenkins: 10,
+    automaticDeployment: 5,
+    apiLint: 5,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 0,
+    functionalTest: 5,
+    e2eTest: 7,
+    performanceTest: 10,
+  },
+};
+
+// Define the scoring scale
+// scale ranges from 1 to 5
+const scoringScale = {
+  build: {
+    jenkins: 1,
+    automaticDeployment: 1,
+    apiLint: 1,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 2,
+    functionalTest: 2,
+    e2eTest: 2,
+    performanceTest: 3,
+  },
+};
+
+// Define the scoring labels
+const labels = {
+  not_implemented: 'not_implemented', //if score == 0
+  low: 'low', //if score <= 20
+  good: 'good', //if score <= 40
+  excellent: 'excellent',  //if score < 50
+  perfect: 'perfect',  //if score == 50
+};
+
+
+function calculateScore(metrics, scoringScale) {
+  const metricScores = {};
+  const metricWeights = {};
+
+  // Calculate metric scores and weights
+  for (const category in metrics) {
+    for (const metric in metrics[category]) {
+      const score = metrics[category][metric];
+      const weight = scoringScale[category][metric];
+      const label = metric + "Label";
+      metricScores[metric] = score * weight;
+      metricWeights[metric] = weight;
+      metricScores[label] = score * weight;
+      metricWeights[label] = weight;
+    }
+  }
+
+  // Normalize scores to 0-100 scale
+  const totalWeight = Object.values(metricWeights).reduce(
+    (sum, weight) => sum + weight,
+    0
+  );
+  const normalizedScores = {};
+  for (const metric in metricScores) {
+    normalizedScores[metric] =
+      ((metricScores[metric] / metricWeights[metric]) * 100) / totalWeight;
+  }
+
+  // Calculate percentiles for each metric score
+  const percentiles = {};
+  for (const metric in normalizedScores) {
+    const score = normalizedScores[metric];
+    const numScoresBelow = Object.values(normalizedScores).filter(
+      (s) => s <= score
+    ).length;
+    percentiles[metric] =
+      (numScoresBelow / Object.values(normalizedScores).length) * 100;
+  }
+
+  // Assign percentile-based labels to metric scores
+  const metricLabels = {};
+  for (const metric in normalizedScores) {
+    const percentile = percentiles[metric];
+    if (percentile < 20) {
+      metricLabels[metric] = "very low";
+    } else if (percentile < 40) {
+      metricLabels[metric] = "low";
+    } else if (percentile < 60) {
+      metricLabels[metric] = "moderate";
+    } else if (percentile < 80) {
+      metricLabels[metric] = "high";
+    } else {
+      metricLabels[metric] = "very high";
+    }
+  }
+
+  // Return results as an object
+  return {
+    scores: metricScores,
+    weights: metricWeights,
+    labels: metricLabels,
+  };
+}
+
+const metricScores = calculateScore(metrics, scoring_scale, labels);
+
+calculateScore(metrics, scoringScale) 

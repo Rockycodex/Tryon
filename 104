@@ -1,0 +1,51 @@
+function calculateScore(metrics, scoringScale, labels) {
+  const metricScores = {};
+  let totalWeight = 0;
+  let totalScore = 0;
+
+  for (const category in metrics) {
+    metricScores[category] = {};
+    let categoryScore = 0;
+    let categoryWeight = 0;
+
+    for (const metric in metrics[category]) {
+      const score = Math.round(metrics[category][metric] * scoringScale[category][metric]);
+      const weight = scoringScale[category][metric];
+
+      metricScores[category][metric] = score;
+      categoryScore += score;
+      categoryWeight += weight;
+    }
+
+    const categoryAverage = Math.round((categoryScore / categoryWeight) * 10) / 10;
+    metricScores[category]['categoryScore'] = categoryAverage;
+    metricScores[category]['categoryWeight'] = categoryWeight;
+    totalScore += categoryScore;
+    totalWeight += categoryWeight;
+  }
+
+  const overallScore = Math.round((totalScore / totalWeight) * 10) / 10;
+  metricScores['overallScore'] = overallScore;
+
+  for (const category in metricScores) {
+    if (category === 'overallScore') {
+      continue;
+    }
+
+    const categoryScore = metricScores[category]['categoryScore'];
+    const percentile = (categoryScore / 10) * 100;
+    let label = labels['not_implemented'];
+
+    for (const labelName in labels) {
+      const labelWeight = labels[labelName];
+      if (percentile < labelWeight) {
+        break;
+      }
+      label = labelName;
+    }
+
+    metricScores[category]['label'] = label;
+  }
+
+  return metricScores;
+}

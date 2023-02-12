@@ -1,0 +1,83 @@
+// Define the metrics, label and weights
+// metric ranges from 0-10.
+// metric value could be 0, 2, 5, 7, 10
+const metrics = {
+  build: {
+    jenkins: 10,
+    automaticDeployment: 5,
+    apiLint: 5,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 0,
+    functionalTest: 5,
+    e2eTest: 7,
+    performanceTest: 10,
+  },
+};
+
+// Define the scoring scale
+// scale ranges from 1 to 5
+const scoringScale = {
+  build: {
+    jenkins: 1,
+    automaticDeployment: 1,
+    apiLint: 1,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 2,
+    functionalTest: 2,
+    e2eTest: 2,
+    performanceTest: 3,
+  },
+};
+
+// Define the scoring labels
+// When given metric is multiplied by corresponding scaling factor each metric may range from 0 to 50 
+// Now we have to assign labels based on score
+// for example, if the metric score for apiLint is 5 which is in between 0  and 20 so label for that metric should be low
+const labels = {
+  not_implemented: 'Not Implemented',
+  low: 'Low',
+  below_average: 'Below Average',
+  above_average: 'Above Average',
+  high: 'High',
+  perfect: 'Perfect',
+};
+
+// Calculate the total score for each category
+const scores = {};
+for (const category in metrics) {
+  let score = 0;
+  for (const metric in metrics[category]) {
+    score += metrics[category][metric] * scoringScale[category][metric];
+  }
+  scores[category] = score;
+}
+
+// Assign labels to the score for each metric
+const scoreLabels = {};
+for (const category in metrics) {
+  for (const metric in metrics[category]) {
+    const score = metrics[category][metric] * scoringScale[category][metric];
+    if (score === 0) {
+      scoreLabels[metric] = labels.not_implemented;
+    } else if (score < 21) {
+      scoreLabels[metric] = labels.low;
+    } else if (score < 31) {
+      scoreLabels[metric] = labels.below_average;
+    } else if (score < 41) {
+      scoreLabels[metric] = labels.above_average;
+    } else if (score < 51) {
+      scoreLabels[metric] = labels.high;
+    } else {
+      scoreLabels[metric] = labels.perfect;
+    }
+  }
+}
+
+console.log('Scores:');
+console.log(scores);
+console.log('Score Labels:');
+console.log(scoreLabels);

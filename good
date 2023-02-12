@@ -1,0 +1,79 @@
+const metrics = {
+  build: {
+    jenkins: 10,
+    automaticDeployment: 5,
+    apiLint: 5,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 0,
+    functionalTest: 5,
+    e2eTest: 7,
+    performanceTest: 10,
+  },
+};
+
+const scoringScale = {
+  build: {
+    jenkins: 1,
+    automaticDeployment: 1,
+    apiLint: 1,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 2,
+    functionalTest: 2,
+    e2eTest: 2,
+    performanceTest: 3,
+  },
+};
+
+const labels = {
+  not_implemented: "not_implemented",
+  low: "low",
+  good: "good",
+  excellent: "excellent",
+  perfect: "perfect",
+};
+
+const calculateScore = (value, scale) => {
+  return Math.floor((value / 10) * 50 * scale) / 10;
+};
+
+const calculateLabel = (score) => {
+  if (score === 0) {
+    return labels.not_implemented;
+  } else if (score <= 20) {
+    return labels.low;
+  } else if (score <= 40) {
+    return labels.good;
+  } else if (score < 50) {
+    return labels.excellent;
+  } else {
+    return labels.perfect;
+  }
+};
+
+for (const [metricName, metric] of Object.entries(metrics)) {
+  let totalScore = 0;
+  let totalWeight = 0;
+
+  for (const [metricLabel, metricValue] of Object.entries(metric)) {
+    const scale = scoringScale[metricName][metricLabel];
+    const weight = scale * 10;
+    const score = calculateScore(metricValue, scale);
+    const label = calculateLabel(score);
+
+    console.log(`Score for ${metricLabel} (${metricValue}): ${score}`);
+    console.log(`Label for ${metricLabel} (${metricValue}): ${label}`);
+
+    totalScore += score * weight;
+    totalWeight += weight;
+  }
+
+  const metricScore = Math.floor((totalScore / totalWeight) * 10) / 10;
+  const metricLabel = calculateLabel(metricScore * 10);
+
+  console.log(`Score for ${metricName}: ${metricScore}`);
+  console.log(`Label for ${metricName}: ${metricLabel}`);
+}

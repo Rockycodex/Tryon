@@ -1,0 +1,115 @@
+// Define the metrics, label and weights
+// metric ranges from 0-10.
+// metric value could be 0, 2, 5, 7, 10
+const metrics = {
+  build: {
+    jenkins: 10,
+    automaticDeployment: 5,
+    apiLint: 5,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 0,
+    functionalTest: 5,
+    e2eTest: 7,
+    performanceTest: 10,
+  },
+};
+
+// Define the scoring scale
+// scale ranges from 1 to 5
+const scoringScale = {
+  build: {
+    jenkins: 1,
+    automaticDeployment: 1,
+    apiLint: 1,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 2,
+    functionalTest: 2,
+    e2eTest: 2,
+    performanceTest: 3,
+  },
+};
+
+// Define the scoring labels and their weights
+const labels = {
+  not_implemented: 0,
+  low: 20,
+  below_average: 40,
+  above_average: 60,
+  high: 80,
+  perfect: 100,
+};
+
+// Calculate the score for each metric
+const metricScores = {};
+let overallScore = 0;
+
+for (const category in metrics) {
+  metricScores[category] = {};
+  let categoryScore = 0;
+  let maxMetricValue = 0;
+
+  for (const metric in metrics[category]) {
+    const metricValue = metrics[category][metric];
+    const scale = scoringScale[category][metric];
+    const weightedMetricValue = metricValue * scale;
+    const metricScore = (weightedMetricValue / 10) * 100;
+    metricScores[category][metric] = metricScore;
+    categoryScore += metricScore;
+    maxMetricValue += 10 * scale;
+  }
+
+  const categoryWeight = maxMetricValue > 0 ? categoryScore / maxMetricValue : 0;
+  overallScore += categoryWeight * 100;
+}
+
+// Assign labels based on score
+const metricLabels = {};
+
+for (const category in metricScores) {
+  metricLabels[category] = {};
+  for (const metric in metricScores[category]) {
+    const metricScore = metricScores[category][metric];
+
+    if (metricScore === 0) {
+      metricLabels[category][metric] = {
+        score: metricScore.toFixed(2),
+        label: "not_implemented",
+      };
+    } else if (metricScore < 20) {
+      metricLabels[category][metric] = {
+        score: metricScore.toFixed(2),
+        label: "low",
+      };
+    } else if (metricScore < 40) {
+      metricLabels[category][metric] = {
+        score: metricScore.toFixed(2),
+        label: "below_average",
+      };
+    } else if (metricScore < 60) {
+      metricLabels[category][metric] = {
+        score: metricScore.toFixed(2),
+        label: "above_average",
+      };
+    } else if (metricScore < 80) {
+      metricLabels[category][metric] = {
+        score: metricScore.toFixed(2),
+        label: "high",
+      };
+    } else {
+      metricLabels[category][metric] = {
+        score: metricScore.toFixed(2),
+        label: "perfect",
+      };
+    }
+  }
+}
+
+// Construct the response object
+const response = {
+  overallScore: overallScore.toFixed(2),
+  metricLabels
+}

@@ -1,0 +1,135 @@
+// this is a good solution
+
+// Define the metrics, label and weights
+// metric ranges from 0-10.
+// metric value could be 0, 2, 5, 7, 10
+const metrics = {
+  build: {
+    jenkins: 10,
+    automaticDeployment: 5,
+    apiLint: 5,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 0,
+    functionalTest: 5,
+    e2eTest: 7,
+    performanceTest: 10,
+  },
+};
+
+// Define the scoring scale
+// scale ranges from 1 to 5
+const scoringScale = {
+  build: {
+    jenkins: 1,
+    automaticDeployment: 1,
+    apiLint: 1,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 2,
+    functionalTest: 2,
+    e2eTest: 2,
+    performanceTest: 3,
+  },
+};
+
+// Define the scoring labels
+const thresholds = [0, 20, 30, 40, 50];
+const labels = {
+  not_implemented: 0,
+  low: "0-20",
+  below_average: "20-30",
+  above_average: "30-40",
+  high: "40-50",
+  perfect: "50",
+};
+
+// Compute scores and labels for each metric
+const scores = {};
+for (const [category, categoryMetrics] of Object.entries(metrics)) {
+  scores[category] = {};
+  for (const [metric, value] of Object.entries(categoryMetrics)) {
+    const scale = scoringScale[category][metric];
+    const score = value * scale;
+    const label = getLabel(score);
+    scores[category][metric] = { score, label };
+  }
+}
+
+// Function to get label based on the score and thresholds
+// function getLabel(score, thresholds, labels) {
+//   if (score === 0) {
+//     return labels.not_implemented;
+//   }
+//   for (let i = thresholds.length - 1; i >= 0; i--) {
+//     if (score >= thresholds[i]) {
+//       return labels[Object.keys(labels)[i]];
+//     }
+//   }
+// }
+function getLabel(score) {
+  if (score === 0) {
+    return "Not Implemented";
+  }
+  if (score > 0 && score < 20) {
+    return "Low";
+  } else if (score >= 20 && score < 30) {
+    return "Average";
+  } else if (score >= 30 && score < 40) {
+    return "Above Average";
+  } else if (score >= 40 && score < 50) {
+    return "High";
+  } else if (score == 50) {
+    return "Perfect";
+  } else {
+    return "Not Implemented";
+  }
+}
+
+// Output scores and labels
+console.log(scores);
+
+//////  Response  ////////
+
+/*
+const score = {
+  build: {
+    jenkins: {
+      score: 10,
+      label: "Low",
+    },
+    automaticDeployment: {
+      score: 5,
+      label: "Low",
+    },
+    apiLint: {
+      score: 5,
+      label: "Low",
+    },
+    unitTest: {
+      score: 4,
+      label: "Low",
+    },
+  },
+  test: {
+    integrationTest: {
+      score: 0,
+      label: "Not Implemented",
+    },
+    functionalTest: {
+      score: 10,
+      label: "Low",
+    },
+    e2eTest: {
+      score: 14,
+      label: "Low",
+    },
+    performanceTest: {
+      score: 30,
+      label: "Above Average",
+    },
+  },
+};
+*/

@@ -1,0 +1,114 @@
+function calculateScore(metrics, scoringScale) {
+  const metricScores = {};
+  let totalScore = 0;
+  let totalWeight = 0;
+
+  // Iterate through all the metrics
+  for (const category in metrics) {
+    for (const metric in metrics[category]) {
+      const value = metrics[category][metric];
+      const weight = scoringScale[category][metric];
+
+      const score = value * weight;
+      metricScores[metric] = score;
+      totalScore += score;
+      totalWeight += weight;
+    }
+  }
+
+  const overallScore = totalScore / totalWeight;
+
+  // Define the scoring labels and their percentile weights
+  const labels = {
+    not_implemented: 0,
+    low: 20,
+    below_average: 40,
+    above_average: 60,
+    high: 80,
+    perfect: 100,
+  };
+
+  // Determine the percentile weight for the overall score
+  let percentileWeight = 0;
+  if (overallScore > 0) {
+    for (const label in labels) {
+      if (overallScore >= labels[label]) {
+        percentileWeight = labels[label];
+      } else {
+        break;
+      }
+    }
+  }
+
+  // Calculate the score and label for each individual metric
+  const metricLabels = {};
+  for (const category in metrics) {
+    for (const metric in metrics[category]) {
+      const value = metrics[category][metric];
+      const weight = scoringScale[category][metric];
+
+      const score = metricScores[metric];
+      const metricScore = score / totalWeight;
+      const metricPercentile = Math.round((metricScore / overallScore) * 100);
+
+      // Determine the label for the individual metric based on the percentile weight
+      let metricLabel = "";
+      if (metricScore === 0) {
+        metricLabel = "not_implemented";
+      } else {
+        for (const label in labels) {
+          if (metricPercentile >= labels[label]) {
+            metricLabel = label;
+          } else {
+            break;
+          }
+        }
+      }
+
+      metricLabels[metric] = {
+        score: metricScore.toFixed(2),
+        label: metricLabel,
+      };
+    }
+  }
+
+  return { overallScore: overallScore.toFixed(2), metricLabels };
+}
+
+const resp = {
+    "overallScore": "5.57",
+    "metricLabels": {
+        "jenkins": {
+            "score": "0.71",
+            "label": "not_implemented"
+        },
+        "automaticDeployment": {
+            "score": "0.36",
+            "label": "not_implemented"
+        },
+        "apiLint": {
+            "score": "0.36",
+            "label": "not_implemented"
+        },
+        "unitTest": {
+            "score": "0.29",
+            "label": "not_implemented"
+        },
+        "integrationTest": {
+            "score": "0.00",
+            "label": "not_implemented"
+        },
+        "functionalTest": {
+            "score": "0.71",
+            "label": "not_implemented"
+        },
+        "e2eTest": {
+            "score": "1.00",
+            "label": "not_implemented"
+        },
+        "performanceTest": {
+            "score": "2.14",
+            "label": "low"
+        }
+    }
+}

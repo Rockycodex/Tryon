@@ -1,0 +1,98 @@
+// Define the metrics, label and weights
+// metric ranges from 0-10.
+// metric value could be 0, 2, 5, 7, 10
+const metrics = {
+  build: {
+    jenkins: 10,
+    automaticDeployment: 5,
+    apiLint: 5,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 0,
+    functionalTest: 5,
+    e2eTest: 7,
+    performanceTest: 10,
+  },
+};
+
+// Define the scoring scale
+// scale ranges from 1 to 5
+const scoringScale = {
+  build: {
+    jenkins: 1,
+    automaticDeployment: 1,
+    apiLint: 1,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 2,
+    functionalTest: 2,
+    e2eTest: 2,
+    performanceTest: 3,
+  },
+};
+
+// Define the scoring labels and their percentile weights
+const labels = {
+  not_implemented: 0,
+  low: 20,
+  below_average: 40,
+  above_average: 60,
+  high: 80,
+  perfect: 100,
+};
+
+// Calculate the metric scores and labels
+const metricScores = {};
+const metricLabels = {};
+let totalWeight = 0;
+let totalScore = 0;
+
+Object.entries(metrics).forEach(([category, categoryMetrics]) => {
+  metricLabels[category] = {};
+
+  Object.entries(categoryMetrics).forEach(([metric, value]) => {
+    const weight = scoringScale[category][metric];
+    const score = value * weight;
+
+    totalWeight += weight;
+    totalScore += score;
+
+    metricScores[metric] = score;
+    metricLabels[category][metric] = {
+      score: score.toFixed(2),
+      label: getLabel(score, weight),
+    };
+  });
+});
+
+// Calculate the overall score
+const overallScore = (totalScore / totalWeight).toFixed(2);
+
+// Define the function to get the label for a given score and weight
+function getLabel(score, weight) {
+  const percentileScore = (score / weight) * 100;
+
+  if (percentileScore === 0) {
+    return "not_implemented";
+  } else if (percentileScore <= 20) {
+    return "low";
+  } else if (percentileScore <= 40) {
+    return "below_average";
+  } else if (percentileScore <= 60) {
+    return "above_average";
+  } else if (percentileScore <= 80) {
+    return "high";
+  } else {
+    return "perfect";
+  }
+}
+
+// Create the response object
+const response = {
+  overallScore,
+  metricLabels,
+};
+
+console.log(JSON.stringify(response, null, 2));
