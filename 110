@@ -1,0 +1,94 @@
+// Define the metrics, label and weights
+// metric ranges from 0-10.
+// metric value could be 0, 2, 5, 7, 10
+const metrics = {
+  build: {
+    jenkins: 10,
+    automaticDeployment: 5,
+    apiLint: 5,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 0,
+    functionalTest: 5,
+    e2eTest: 7,
+    performanceTest: 10,
+  },
+};
+
+// Define the scoring scale
+// scale ranges from 1 to 5
+const scoringScale = {
+  build: {
+    jenkins: 1,
+    automaticDeployment: 1,
+    apiLint: 1,
+    unitTest: 2,
+  },
+  test: {
+    integrationTest: 2,
+    functionalTest: 2,
+    e2eTest: 2,
+    performanceTest: 3,
+  },
+};
+
+// Define the excluded metrics for the test category
+const excludedMetrics = ['integrationTest', 'e2eTest'];
+
+// Define the scoring labels
+const labels = {
+  not_implemented: 0,
+  low: "0-20",
+  below_average: "20-30",
+  above_average: "30-40",
+  high: "40-50",
+  perfect: "50",
+};
+
+// Compute scores and labels for each metric
+const scores = {};
+for (const [category, categoryMetrics] of Object.entries(metrics)) {
+  scores[category] = {};
+  let totalScore = 0;
+  let totalScale = 0;
+  for (const [metric, value] of Object.entries(categoryMetrics)) {
+    if (category === 'test' && excludedMetrics.includes(metric)) {
+      continue; // skip excluded metric
+    }
+    const scale = scoringScale[category][metric];
+    totalScore += value * scale;
+    totalScale += scale;
+  }
+  const adjustedTotalScore = totalScore - excludedMetrics.reduce((sum, metric) => sum + categoryMetrics[metric] * scoringScale[category][metric], 0);
+  const label = getLabel(adjustedTotalScore, totalScale);
+  scores[category].total = { score: adjustedTotalScore, label };
+  for (const [metric, value] of Object.entries(categoryMetrics)) {
+    if (category === 'test' && excludedMetrics.includes(metric)) {
+      scores[category][metric] = { score: 0, label: 'Excluded' };
+    } else {
+      const scale = scoringScale[category][metric];
+      const score = value * scale;
+      scores[category][metric] = { score, label: getLabel(score, scale) };
+    }
+  }
+}
+
+function getLabel(score, scale) {
+  if (score === 0) {
+    return "Not Implemented";
+  }
+  const weightedScore = score / scale;
+  if (weightedScore < 0.2) {
+    return "Low";
+  } else if (weightedScore < 0.3) {
+    return "Below Average";
+  } else if (weightedScore < 0.4) {
+    return "Above Average";
+  } else if (weightedScore < 0.5) {
+    return "High";
+  } else {
+    return "Perfect";
+  }
+}
+
