@@ -91,4 +91,53 @@ function getLabel(score, scale) {
     return "Perfect";
   }
 }
+// ==========================================
+// ==========================================
+function computeCategoryScore(category, metrics, scoringScale, excludedMetrics) {
+  let score = 0;
+  let count = 0;
 
+  for (const [metric, value] of Object.entries(metrics)) {
+    if (!excludedMetrics.includes(metric)) {
+      const scale = scoringScale[category][metric];
+      score += value * scale;
+      count++;
+    }
+  }
+
+  if (count === 0) {
+    return 0;
+  }
+
+  return score / (count * 10);
+}
+
+// ==========================================
+// ==========================================
+
+const excludedMetrics = ['integrationTest', 'e2eTest'];
+
+const categoryScores = {};
+for (const [category, categoryMetrics] of Object.entries(metrics)) {
+  const categoryScore = computeCategoryScore(category, categoryMetrics, scoringScale, excludedMetrics);
+  const label = getLabel(categoryScore);
+  categoryScores[category] = { score: categoryScore, label };
+}
+
+console.log(categoryScores);
+
+
+// {
+//   build: {
+//     jenkins: { score: 10, label: 'Low' },
+//     automaticDeployment: { score: 5, label: 'Low' },
+//     apiLint: { score: 5, label: 'Low' },
+//     unitTest: { score: 4, label: 'Low' }
+//   },
+//   test: {
+//     integrationTest: { score: 0, label: 'Not Implemented' },
+//     functionalTest: { score: 10, label: 'Low' },
+//     e2eTest: { score: 14, label: 'Low' },
+//     performanceTest: { score: 30, label: 'Above Average' }
+//   }
+// }
